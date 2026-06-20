@@ -1,0 +1,25 @@
+FROM apache/spark:3.5.3
+
+USER root
+
+ARG ICEBERG_VERSION=1.8.1
+ARG HADOOP_AWS_VERSION=3.3.4          # matches Hadoop bundled in Spark 3.5.3
+ARG AWS_SDK_VERSION=1.12.262          # matches hadoop-aws 3.3.4
+ARG MAVEN=https://repo1.maven.org/maven2
+
+RUN set -eux; \
+    cd /opt/spark/jars; \
+    curl -fSL -o iceberg-spark-runtime-3.5_2.12-${ICEBERG_VERSION}.jar \
+      ${MAVEN}/org/apache/iceberg/iceberg-spark-runtime-3.5_2.12/${ICEBERG_VERSION}/iceberg-spark-runtime-3.5_2.12-${ICEBERG_VERSION}.jar; \
+    curl -fSL -o hadoop-aws-${HADOOP_AWS_VERSION}.jar \
+      ${MAVEN}/org/apache/hadoop/hadoop-aws/${HADOOP_AWS_VERSION}/hadoop-aws-${HADOOP_AWS_VERSION}.jar; \
+    curl -fSL -o aws-java-sdk-bundle-${AWS_SDK_VERSION}.jar \
+      ${MAVEN}/com/amazonaws/aws-java-sdk-bundle/${AWS_SDK_VERSION}/aws-java-sdk-bundle-${AWS_SDK_VERSION}.jar
+
+RUN pip install --no-cache-dir kagglehub
+
+RUN mkdir -p /home/spark && chown -R spark:spark /home/spark
+ENV HOME=/home/spark
+
+USER spark
+WORKDIR /app
